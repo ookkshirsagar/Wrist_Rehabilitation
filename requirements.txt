@@ -1,0 +1,2 @@
+paho-mqtt==1.6.1          # MQTT library for communication
+DynamixelSDK==3.7.51      # Library for controlling Dynamixel motors
