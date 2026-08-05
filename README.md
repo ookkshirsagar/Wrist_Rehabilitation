@@ -11,88 +11,92 @@ The system is built on **Current-based Position Control Mode**, ensuring precise
 
 ## Key Features
 
-1. **Teleoperation**  
-   - Real-time mirroring of the Doctor System's wrist movements by the Patient System, ensuring effective and synchronized rehabilitation tasks.
+1. **Teleoperation**
+   Real-time mirroring of the Doctor System's wrist movements by the Patient System, ensuring effective and synchronized rehabilitation tasks.
 
-2. **Current-based Position Control Mode**  
-   - Provides force-based control, enabling adjustable resistance or assistive torque for wrist movements.
+2. **Current-based Position Control Mode**
+   Provides force-based control, enabling adjustable resistance or assistive torque for wrist movements.
 
-3. **Safety Mechanisms**  
-   - Built-in safety features including temperature, position, and current limits to prevent device or user harm.
+3. **Safety Mechanisms**
+   Built-in safety features including temperature, position, and current limits to prevent device or user harm.
 
-4. **Customizable Motion Profiles**  
-   - Smooth, precise, and controlled wrist movements with adjustable acceleration and velocity settings.
+4. **Customizable Motion Profiles**
+   Smooth, precise, and controlled wrist movements with adjustable acceleration and velocity settings.
 
-5. **Modular Design**  
-   - Clear separation of hardware control (Motor), task coordination (Controller), and communication (MQTT) for scalability, maintainability, and testing.
+5. **Modular Design**
+   Clear separation of hardware control (Motor), task coordination (Controller), and communication (MQTT) for scalability, maintainability, and testing.
 
 ---
 
 ## Project Structure
 
 ```
-project/
+Wrist_Rehabilitation/
 │
-├── Motor.py           # Low-level motor operations
-├── Controller.py      # High-level task coordination for rehabilitation
-├── Doctor.py          # Entrypoint for Doctor-side wrist control
-├── Patient.py         # Entrypoint for Patient-side wrist control
-├── config/            # Configuration files
-│   ├── motor_config.py    # Motor-specific configuration values
-├── Mqtt.py            # MQTT module for system communication
-├── README.md          # Project overview and setup instructions
-├── requirements.txt   # Dependencies and libraries required for the project
-├── tests/             # Unit and integration tests
-│   ├── test_motor.py      # Tests for Motor.py
-│   ├── test_controller.py # Tests for Controller.py
-├── data/              # Directory to store logs and calibration data
-│   ├── logs/              # Log files for debugging and analysis
-│       ├── controller_initialization.py
-│       ├── doctor_system_execution.py
-│       ├── motor_initialization.py
-│       ├── mqtt_wrist_rehab.py
-│       ├── patient_system_execution.py
-│       ├── test_controller_operations.py
-│       ├── test_motor_integration.py
-├── literature/        # Documentation explaining key design and implementation decisions
-└── DynamixelSDK/      # Dynamixel SDK library for motor communication
-
+├── Motor.py            # Low-level motor operations
+├── Controller.py        # High-level task coordination for rehabilitation
+├── Doctor.py             # Entrypoint for Doctor-side wrist control
+├── Patient.py            # Entrypoint for Patient-side wrist control
+├── Mqtt.py               # MQTT module for system communication
+├── config/
+│   └── motor_config.py   # Motor-specific configuration values
+├── tests/
+│   ├── conftest.py               # Shared pytest fixtures
+│   ├── test_motor.py             # Motor unit tests, mocked hardware
+│   ├── test_controller.py        # PD control loop unit tests
+│   ├── test_safety.py            # Doctor/Patient safety-check unit tests
+│   └── hardware/                 # Manual scripts requiring real hardware
+│       ├── motor_integration_check.py
+│       └── controller_operations_check.py
+├── literature/
+│   └── literature.md     # Design decisions, control table reference, ROM values
+├── .env.example           # Template for local MQTT credentials
+├── requirements.txt        # Runtime dependencies
+├── requirements-dev.txt    # Test dependencies
+├── pytest.ini
+├── LICENSE
+└── README.md
 ```
 
-# Installation and Setup
-
-## Prerequisites
-Ensure you have the following installed on your system:
-
-- **Python 3.8+**
-- **DynamixelSDK** (included in the `DynamixelSDK/` directory of this project)
-- **Required Python libraries** (see `requirements.txt`)
+Logs are written at runtime to `data/logs/` (created automatically, not committed).
 
 ---
 
-## Installation Steps
+## Installation and Setup
+
+### Prerequisites
+
+- Python 3.8+
+- A Dynamixel motor reachable over serial (e.g. `/dev/ttyUSB0` on Linux) to actually operate the hardware. The automated test suite does not require this.
+
+### Installation Steps
 
 1. Clone this repository:
    ```bash
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone https://github.com/ookkshirsagar/Wrist_Rehabilitation.git
+   cd Wrist_Rehabilitation
    ```
 
-2. Install the required Python libraries:
+2. Create a virtual environment and install dependencies:
    ```bash
+   python3 -m venv venv
+   source venv/bin/activate        # Linux / macOS
+   venv\Scripts\activate           # Windows PowerShell
+
    pip install -r requirements.txt
    ```
 
-3. Add the DynamixelSDK path to your Python environment:
+3. Configure MQTT credentials. The broker host, username, and password are read from the environment, never hardcoded:
    ```bash
-   export PYTHONPATH="$PYTHONPATH:$(pwd)/DynamixelSDK"
+   cp .env.example .env
+   # then edit .env with your actual HiveMQ (or other broker) credentials
    ```
 
-4. Verify that the necessary serial ports (e.g., `/dev/ttyUSB0` on Linux) are accessible for the Dynamixel motors.
-
+4. Verify that the necessary serial ports are accessible for the Dynamixel motors:
    ```bash
-      sudo chmod a+rw /dev/ttyUSB0
+   sudo chmod a+rw /dev/ttyUSB0
    ```
+
 ---
 
 ## Usage Instructions
@@ -109,77 +113,54 @@ Ensure you have the following installed on your system:
   ```
 
 ### Logs and Telemetry
-Log files for debugging and system analysis are stored in the `data/logs/` directory. These include system initialization details, runtime data, and error reports.
+Log files for debugging and system analysis are written to `data/logs/` at runtime: system initialization details, runtime data, and error reports.
+
+---
+
+## Running tests
+
+The main test suite mocks the Dynamixel SDK and runs without any hardware attached:
+
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+For manual checks against a real, connected motor, see `tests/hardware/`:
+
+```bash
+python tests/hardware/motor_integration_check.py
+python tests/hardware/controller_operations_check.py
+```
 
 ---
 
 ## Additional Resources
 
-### Dynamixel SDK Documentation
-The project utilizes the [DynamixelSDK](https://github.com/ROBOTIS-GIT/DynamixelSDK/tree/main) for motor communication.
+### Dynamixel SDK
+Motor communication uses the [DynamixelSDK](https://github.com/ROBOTIS-GIT/DynamixelSDK) Python package (`dynamixel_sdk` on PyPI), installed via `requirements.txt`, not vendored in this repository.
 
 ### Literature
-The `Literature/` folder contains detailed explanations of design decisions, including:
-- Choice of Current-based Position Control Mode.
-- Safety mechanisms and their thresholds.
-- Teleoperation synchronization logic.
+[`literature/literature.md`](literature/literature.md) documents the design rationale in detail, including:
+- Dynamixel control table parameters used
+- Choice of Current-based Position Control Mode
+- Safety mechanisms and their thresholds
+- Wrist range-of-motion values and their source
 
 ---
 
 ## Contribution Guidelines
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome. Please:
 1. Fork this repository.
 2. Create a new branch for your feature or fix.
-3. Submit a pull request for review.
+3. Run `pytest -v` and make sure it passes.
+4. Submit a pull request for review.
 
 For any questions or feedback, please raise an issue in the repository.
 
-
 ---
 
-## Step-by-Step Guide for Beginners
+## License
 
-### How to Clone the Repository
-
-If you're new to Git, follow these simple steps to get started:
-
-1. **Install Git**
-   - **Windows**: Download and install [Git for Windows](https://git-scm.com/downloads).
-   - **Mac**: Install Git via the terminal using:
-     ```bash
-     brew install git
-     ```
-   - **Linux**: Install Git using your package manager:
-     ```bash
-     sudo apt update
-     sudo apt install git
-     ```
-   - Verify Git is installed:
-     ```bash
-     git --version
-     ```
-
-2. **Open a Terminal or Command Prompt**
-   - **Windows**: Use Git Bash.
-   - **Mac/Linux**: Open the terminal application.
-
-3. **Navigate to Your Desired Folder**
-   - Use the `cd` command to navigate to the folder where you want to clone the repository:
-     ```bash
-     cd /path/to/your/folder
-     ```
-
-4. **Clone the Repository**
-   - Copy the repository URL (replace `<repository_url>` with the actual URL) and run:
-     ```bash
-     git clone <repository_url>
-     ```
-   - Example:
-     ```bash
-     git clone https://github.com/YourUsername/WristRehabRobot.git
-     ```
-
-5. **Enter the Project Directory**
-   ```bash
-   cd WristRehabRobot
+[MIT](LICENSE)

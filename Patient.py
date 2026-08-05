@@ -80,11 +80,11 @@ class PatientSystem:
             temperature = self.motor.readRegister(1, self.motor.ADDR_PRESENT_TEMPERATURE)
             current = self.motor.readCurrent()
 
-            if temperature > self.motor.temp_limit:
+            if temperature > temp_limit:
                 logging.warning(f"Temperature limit exceeded! Current: {temperature}°C.")
                 return False
 
-            if abs(current) > self.motor.current_limit:
+            if abs(current) > current_limit:
                 logging.warning(f"Current limit exceeded! Current: {current:.2f} mA.")
                 return False
 

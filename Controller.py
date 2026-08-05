@@ -87,9 +87,13 @@ class Controller:
             logging.info(f"Setting target position to {target_position}° ({target_pulses} pulses).")
 
             # PD Control Loop
+            # motor.readPosition() returns radians; invert Motor's own
+            # pulses -> radians factor (3.14 / 2048) to get pulses back,
+            # rather than treating radians as degrees.
+            radians_to_pulses = 2048 / 3.14
             while True:
                 # Get current position in motor pulses
-                current_position = self.motor.readPosition() * pulses_per_degree
+                current_position = self.motor.readPosition() * radians_to_pulses
 
                 # Compute error and derivative
                 error = target_pulses - current_position

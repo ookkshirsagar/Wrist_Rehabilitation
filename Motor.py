@@ -21,9 +21,7 @@ References:
   83° flexion, 81° extension; considering Safety
 """
 
-from DynamixelSDK.python.src.dynamixel_sdk import *
-from DynamixelSDK.python.src.dynamixel_sdk.port_handler import PortHandler
-from DynamixelSDK.python.src.dynamixel_sdk.packet_handler import PacketHandler
+from dynamixel_sdk import *
 import logging
 
 # -------Configure logging-----------------------------------------
@@ -75,6 +73,7 @@ class Motor:
     ADDR_TORQUE_ENABLE = 64
     ADDR_STATUS_RETURN_LEVEL = 68
     ADDR_POSITION_P_GAIN = 84
+    ADDR_GOAL_CURRENT = 102
     ADDR_PROFILE_ACCELERATION = 108
     ADDR_PROFILE_VELOCITY = 112
     ADDR_GOAL_POSITION = 116
@@ -120,13 +119,14 @@ class Motor:
     def twosComplement(num_bytes, decNumber):
         """Converts a number to its two's complement representation."""
         if num_bytes == 2:
-            return decNumber - (0xFFFF if decNumber > 0xFFFF // 2 else 0)
+            return decNumber - (0x10000 if decNumber > 0xFFFF // 2 else 0)
         elif num_bytes == 4:
-            return decNumber - (0xFFFFFFFF if decNumber > 0xFFFFFFFF // 2 else 0)
+            return decNumber - (0x100000000 if decNumber > 0xFFFFFFFF // 2 else 0)
 
     @staticmethod
     def intToHex(num_bytes, decNumber):
         """Converts a decimal number to its hexadecimal representation."""
+        decNumber = int(decNumber)
         if num_bytes == 2:
             return decNumber & 0xFFFF
         elif num_bytes == 4:

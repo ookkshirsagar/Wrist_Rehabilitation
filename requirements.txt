@@ -1,2 +1,3 @@
 paho-mqtt==1.6.1          # MQTT library for communication
-DynamixelSDK==3.7.51      # Library for controlling Dynamixel motors
+dynamixel_sdk==3.7.31     # Library for controlling Dynamixel motors
+python-dotenv==1.0.1      # Loads MQTT credentials from a local .env file

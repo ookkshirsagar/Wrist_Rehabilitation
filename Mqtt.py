@@ -19,6 +19,9 @@ import threading
 import logging
 import ssl
 import paho.mqtt.client as paho
+from dotenv import load_dotenv
+
+load_dotenv()  # no-op if .env doesn't exist, e.g. in CI where vars are injected directly
 
 # Configure logging
 LOGS_DIR = os.path.join(os.getcwd(), "data", "logs")
@@ -38,13 +41,22 @@ logging.basicConfig(
 )
 
 # MQTT Configuration
-BROKER = "f40d1650f9db422da8bc00193d76e58a.s1.eu.hivemq.cloud"
-PORT = 8883
-USERNAME = "imek_wrist_rehab"
-PASSWORD = "#Imek@21073"
+# Broker credentials are never hardcoded here; set them in the environment
+# (see .env.example) so they don't end up committed to version control.
+def _require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(
+            f"Environment variable '{name}' is not set. Copy .env.example to .env "
+            "and fill in your MQTT broker credentials."
+        )
+    return value
 
 
-
+BROKER = _require_env("MQTT_BROKER")
+PORT = int(os.environ.get("MQTT_PORT", "8883"))
+USERNAME = _require_env("MQTT_USERNAME")
+PASSWORD = _require_env("MQTT_PASSWORD")
 
 class MQTTClient:
     """
@@ -66,7 +78,7 @@ class MQTTClient:
         """
         self.client = paho.Client(client_id="", protocol=paho.MQTTv5)
         self.client.username_pw_set(USERNAME, PASSWORD)
-        self.client.tls_set(tls_version=ssl.PROTOCOL_TLS)
+        self.client.tls_set(tls_version=ssl.PROTOCOL_TLS_CLIENT)
 
         # Bind callback functions
         self.client.on_connect = self.on_connect
